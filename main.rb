@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 
 require_relative 'tictactoe'
-require 'pry-byebug'
 
 # Helper method to check if a string is numeric
 def numeric_string?(string)
