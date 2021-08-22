@@ -1,5 +1,4 @@
 # frozen_string_literal: false
-require_relative 'helper'
 
 # Player class
 class Player
@@ -13,8 +12,6 @@ end
 
 # Board class
 class Board
-  attr_accessor :board
-
   def initialize
     @board = Array.new(9)
   end
@@ -32,11 +29,12 @@ class Board
     end
   end
 
-  # Returns winner's sigil if there is one, nil otherwise
+  # Returns winner's sigil if there is one, 'TIE' if there's a tie, nil otherwise
   def winner_sigil
     return diagonal_win_check if diagonal_win_check
     return horizontal_win_check if horizontal_win_check
     return vertical_win_check if vertical_win_check
+    return 'TIE' if @board.count(nil).zero?
   end
 
   # String representation of the board
@@ -50,6 +48,10 @@ class Board
     BOARD
   end
 
+  def put(index, sigil)
+    @board[index - 1] = sigil
+  end
+
   private
 
   # Checks for horizontal win, returns winner's sigil if there is one,
@@ -57,8 +59,8 @@ class Board
   def horizontal_win_check
     i = 0
     while i <= 6
-      if board[i] == board[i + 1] && board[i + 1] == board[i + 2]
-        return board[i]
+      if @board[i] == @board[i + 1] && @board[i + 1] == @board[i + 2]
+        return @board[i]
       else
         i += 3
       end
@@ -71,34 +73,62 @@ class Board
   # nil otherwise
   def vertical_win_check
     3.times do |i|
-      return board[i] if board[i] == board[i + 3] && board[i + 3] == board[i + 6]
-
-      nil
+      return @board[i] if @board[i] == @board[i + 3] && @board[i + 3] == @board[i + 6]
     end
+    nil
   end
 
   # Checks for diagonal win, returns winner's sigil if there is one,
   # nil otherwise
   def diagonal_win_check
-    if (board[0] == board[4] && board[4] == board[8]) ||
-       (board[2] == board[4] && board[4] == board[6])
-      return board[4]
+    if (@board[0] == @board[4] && @board[4] == @board[8]) ||
+       (@board[2] == @board[4] && @board[4] == @board[6])
+      return @board[4]
     end
 
     nil
   end
 
-  # Returns a string representation of a board cell - its index if it's empty,
+  # Returns a string representation of a @board cell - its index if it's empty,
   # its sigil otherwise
   def cell_to_s(index)
-    board[index] || index
+    @board[index - 1] || index
   end
 end
 
 # Game class
 class Game
+  attr_accessor :first_player
+
   def initialize(player1, player2)
     @board = Board.new
     @players = [player1, player2]
+    @first_player = @players.sample
+  end
+
+  def play
+    until @board.winner_sigil
+      current_player = @board.next_player(@players[0], @players[1], self)
+      Game.player_move(current_player, @board)
+      puts '------------------------------------------------------'
+    end
+    puts @board
+    if @board.winner_sigil == 'TIE'
+      puts 'Game over, it\'s a tie! Everybody wins!'
+    else
+      winner = @players.find { |player| player.sigil == @board.winner_sigil }
+      puts "#{winner.name} won! Congratulations!"
+    end
+  end
+
+  def self.player_move(player, board)
+    puts board
+    puts "It's #{player.name}'s turn, please make your selection (1-9)"
+    player_selection = gets.chomp
+    until ('1'..'9').include?(player_selection)
+      puts 'Please make a valid selection (1-9)'
+      player_selection = gets.chomp
+    end
+    board.put(player_selection.to_i, player.sigil)
   end
 end
